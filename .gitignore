@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+reference-materials
+src/.codex
+
+node_modules
+dist
