@@ -11,6 +11,13 @@ const sections = [
   { id: "fortschritt", label: "Fortschritt" },
 ];
 
+const cardFilters = [
+  { id: "all", label: "Alle", cardLabel: null },
+  { id: "nouns", label: "Substantive", cardLabel: "Substantiv" },
+  { id: "verbs", label: "Verben", cardLabel: "Verb" },
+  { id: "sentences", label: "Sätze", cardLabel: "Satz" },
+];
+
 function makeCards() {
   return [
     ...seedNouns.map((noun) => ({
@@ -180,12 +187,23 @@ function VocabularySection() {
 }
 
 function FlashcardsSection() {
+  const [activeFilter, setActiveFilter] = useState("all");
   const [cardIndex, setCardIndex] = useState(0);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
-  const currentCard = flashcardItems[cardIndex];
+  const selectedFilter = cardFilters.find((filter) => filter.id === activeFilter);
+  const filteredCards = selectedFilter.cardLabel
+    ? flashcardItems.filter((card) => card.label === selectedFilter.cardLabel)
+    : flashcardItems;
+  const currentCard = filteredCards[cardIndex];
+
+  function changeFilter(filterId) {
+    setActiveFilter(filterId);
+    setCardIndex(0);
+    setIsAnswerVisible(false);
+  }
 
   function showNextCard() {
-    setCardIndex((index) => (index + 1) % flashcardItems.length);
+    setCardIndex((index) => (index + 1) % filteredCards.length);
     setIsAnswerVisible(false);
   }
 
@@ -196,12 +214,27 @@ function FlashcardsSection() {
         <h2>Deutsch sehen, Bokmål erinnern.</h2>
       </div>
 
+      <div className="filter-buttons" aria-label="Kartentyp filtern">
+        {cardFilters.map((filter) => (
+          <button
+            className={
+              filter.id === activeFilter
+                ? "filter-button filter-button-active"
+                : "filter-button"
+            }
+            key={filter.id}
+            type="button"
+            onClick={() => changeFilter(filter.id)}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+
       <article className="flashcard" aria-live="polite">
         <div className="card-topline">
           <span className="theme-pill">{currentCard.label}</span>
-          <span>
-            {cardIndex + 1} / {flashcardItems.length}
-          </span>
+          <span>Karte {cardIndex + 1} von {filteredCards.length}</span>
         </div>
         <p className="card-task">{currentCard.task}</p>
         <h3>{currentCard.prompt}</h3>
