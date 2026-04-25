@@ -229,11 +229,13 @@ function FlashcardsSection() {
 function SentencePracticeSection() {
   const [sentenceIndex, setSentenceIndex] = useState(0);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
+  const [typedAnswer, setTypedAnswer] = useState("");
   const currentSentence = seedSentences[sentenceIndex];
 
   function showNextSentence() {
     setSentenceIndex((index) => (index + 1) % seedSentences.length);
     setIsAnswerVisible(false);
+    setTypedAnswer("");
   }
 
   return (
@@ -252,11 +254,26 @@ function SentencePracticeSection() {
         </div>
         <p className="card-task">Übersetze den Satz ins Bokmål.</p>
         <h3>{currentSentence.germanPrompt}</h3>
-        <div className="answer-panel">
-          {isAnswerVisible
-            ? currentSentence.bokmalAnswer
-            : "Antwort ist verdeckt"}
-        </div>
+        <label className="answer-field">
+          <span>Deine Antwort auf Bokmål</span>
+          <textarea
+            value={typedAnswer}
+            onChange={(event) => setTypedAnswer(event.target.value)}
+            rows="4"
+          />
+        </label>
+        {isAnswerVisible && (
+          <div className="comparison-grid">
+            <section className="answer-panel">
+              <span>Meine Antwort</span>
+              <p>{typedAnswer || "Keine Antwort eingegeben."}</p>
+            </section>
+            <section className="answer-panel">
+              <span>Musterantwort</span>
+              <p>{currentSentence.bokmalAnswer}</p>
+            </section>
+          </div>
+        )}
         <div className="button-row">
           <button
             className="button-primary"
