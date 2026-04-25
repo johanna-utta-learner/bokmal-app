@@ -112,6 +112,21 @@ function mapUserItemToCard(item) {
   };
 }
 
+function isValidImportedItem(item) {
+  if (!item || typeof item !== "object") {
+    return false;
+  }
+
+  const fields = userWordFields[item.type];
+
+  return (
+    typeof item.id === "string" &&
+    typeof item.type === "string" &&
+    Array.isArray(fields) &&
+    fields.every((field) => typeof item[field.name] === "string")
+  );
+}
+
 function makeCards(userItems) {
   return [
     ...seedNouns.map((noun) => ({
@@ -361,9 +376,11 @@ function FlashcardsSection() {
 }
 
 function MyWordsSection() {
-  const { addUserItem, deleteUserItem, userItems } = useContext(UserContentContext);
+  const { addUserItem, deleteUserItem, importUserItems, userItems } =
+    useContext(UserContentContext);
   const [selectedType, setSelectedType] = useState("noun");
   const [formValues, setFormValues] = useState(makeEmptyUserForm);
+  const [importStatus, setImportStatus] = useState("");
   const activeFields = userWordFields[selectedType];
 
   function updateField(fieldName, value) {
@@ -399,6 +416,46 @@ function MyWordsSection() {
     setFormValues(makeEmptyUserForm());
   }
 
+  function exportUserItems() {
+    const fileContents = JSON.stringify(userItems, null, 2);
+    const blob = new Blob([fileContents], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement("a");
+
+    downloadLink.href = url;
+    downloadLink.download = "bokmal-meine-woerter.json";
+    downloadLink.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importUserItemsFromFile(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const fileText = await file.text();
+      const importedItems = JSON.parse(fileText);
+
+      if (
+        !Array.isArray(importedItems) ||
+        !importedItems.every(isValidImportedItem)
+      ) {
+        setImportStatus("Die Datei enthält keine gültigen Meine Wörter-Daten.");
+        return;
+      }
+
+      importUserItems(importedItems);
+      setImportStatus(`${importedItems.length} Einträge importiert.`);
+    } catch {
+      setImportStatus("Die Datei konnte nicht importiert werden.");
+    } finally {
+      event.target.value = "";
+    }
+  }
+
   function getItemPrompt(item) {
     return item.type === "sentence" ? item.germanPrompt : item.german;
   }
@@ -430,6 +487,25 @@ function MyWordsSection() {
       </div>
 
       <article className="data-card user-content-card">
+        <div className="import-export-row">
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={exportUserItems}
+          >
+            Exportieren
+          </button>
+          <label className="import-button">
+            <span>Importieren</span>
+            <input
+              accept="application/json"
+              type="file"
+              onChange={importUserItemsFromFile}
+            />
+          </label>
+        </div>
+        {importStatus && <p className="import-status">{importStatus}</p>}
+
         <form className="user-word-form" onSubmit={handleSubmit}>
           <label>
             <span>Typ</span>
@@ -591,10 +667,15 @@ function App() {
     );
   }
 
+  function importUserItems(importedItems) {
+    setUserItems(importedItems);
+  }
+
   const userContentValue = {
     addUserItem,
     deleteUserItem,
     flashcardItems,
+    importUserItems,
     userItems,
   };
 
