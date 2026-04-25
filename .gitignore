@@ -28,3 +28,5 @@ src/.codex
 node_modules
 dist
 .codex/
+.codex/
+src/.codex/
