@@ -1,9 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Gloock&family=Inter:wght@400;500;600;700&display=swap");
 
 :root {
-  --color-page-bg: #d6c1c0;
-  --color-card-bg: #f7f1ef;
-  --color-soft-panel: #eadada;
+  --color-page-bg: #ffd9d7;
+  --color-card-bg: #ffc9b7;
+  --color-soft-panel: #ffdddd;
   --color-text-main: #092853;
   --color-text-muted: #396573;
   --color-text-inverse: #ffffff;
