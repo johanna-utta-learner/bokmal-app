@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { seedNouns, seedSentences, seedVerbs } from "./data/seedContent";
 import "./App.css";
+
+const USER_CONTENT_KEY = "bokmal-app-user-content";
+
+const UserContentContext = createContext(null);
 
 const sections = [
   { id: "start", label: "Start" },
@@ -18,7 +22,97 @@ const cardFilters = [
   { id: "sentences", label: "Sätze", cardLabel: "Satz" },
 ];
 
-function makeCards() {
+const userWordFields = {
+  noun: [
+    { name: "german", label: "Deutsch" },
+    { name: "bokmalSingular", label: "Bokmål Singular" },
+    { name: "bokmalSingularDefinite", label: "Bestimmt Singular" },
+    { name: "bokmalPlural", label: "Plural" },
+    { name: "bokmalPluralDefinite", label: "Bestimmt Plural" },
+  ],
+  verb: [
+    { name: "german", label: "Deutsch" },
+    { name: "bokmalInfinitive", label: "Infinitiv" },
+    { name: "bokmalPresent", label: "Präsens" },
+    { name: "bokmalPast", label: "Präteritum" },
+  ],
+  sentence: [
+    { name: "germanPrompt", label: "Deutsch" },
+    { name: "bokmalAnswer", label: "Bokmål" },
+  ],
+};
+
+const userTypeLabels = {
+  noun: "Substantiv",
+  verb: "Verb",
+  sentence: "Satz",
+};
+
+function getInitialUserItems() {
+  try {
+    const storedItems = window.localStorage.getItem(USER_CONTENT_KEY);
+    return storedItems ? JSON.parse(storedItems) : [];
+  } catch {
+    return [];
+  }
+}
+
+function makeEmptyUserForm() {
+  return {
+    german: "",
+    bokmalSingular: "",
+    bokmalSingularDefinite: "",
+    bokmalPlural: "",
+    bokmalPluralDefinite: "",
+    bokmalInfinitive: "",
+    bokmalPresent: "",
+    bokmalPast: "",
+    germanPrompt: "",
+    bokmalAnswer: "",
+  };
+}
+
+function mapUserItemToCard(item) {
+  if (item.type === "noun") {
+    return {
+      id: `${item.id}-card`,
+      label: "Substantiv",
+      theme: "Meine Wörter",
+      prompt: item.german,
+      task: "Erinnere dich an die Bokmål-Formen.",
+      answer: [
+        item.bokmalSingular,
+        item.bokmalSingularDefinite,
+        item.bokmalPlural,
+        item.bokmalPluralDefinite,
+      ].join(" / "),
+    };
+  }
+
+  if (item.type === "verb") {
+    return {
+      id: `${item.id}-card`,
+      label: "Verb",
+      theme: "Meine Wörter",
+      prompt: item.german,
+      task: "Erinnere dich an Infinitiv, Präsens und Präteritum.",
+      answer: [item.bokmalInfinitive, item.bokmalPresent, item.bokmalPast].join(
+        " / ",
+      ),
+    };
+  }
+
+  return {
+    id: `${item.id}-card`,
+    label: "Satz",
+    theme: "Meine Wörter",
+    prompt: item.germanPrompt,
+    task: "Übersetze den Satz ins Bokmål.",
+    answer: item.bokmalAnswer,
+  };
+}
+
+function makeCards(userItems) {
   return [
     ...seedNouns.map((noun) => ({
       id: `${noun.id}-card`,
@@ -51,10 +145,9 @@ function makeCards() {
       task: "Übersetze den Satz ins Bokmål.",
       answer: sentence.bokmalAnswer,
     })),
+    ...userItems.map(mapUserItemToCard),
   ];
 }
-
-const flashcardItems = makeCards();
 
 function Header() {
   return (
@@ -187,6 +280,7 @@ function VocabularySection() {
 }
 
 function FlashcardsSection() {
+  const { flashcardItems } = useContext(UserContentContext);
   const [activeFilter, setActiveFilter] = useState("all");
   const [cardIndex, setCardIndex] = useState(0);
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
@@ -195,6 +289,13 @@ function FlashcardsSection() {
     ? flashcardItems.filter((card) => card.label === selectedFilter.cardLabel)
     : flashcardItems;
   const currentCard = filteredCards[cardIndex];
+
+  useEffect(() => {
+    if (cardIndex >= filteredCards.length) {
+      setCardIndex(0);
+      setIsAnswerVisible(false);
+    }
+  }, [cardIndex, filteredCards.length]);
 
   function changeFilter(filterId) {
     setActiveFilter(filterId);
@@ -253,6 +354,138 @@ function FlashcardsSection() {
           <button className="button-secondary" type="button" onClick={showNextCard}>
             Nächste Karte
           </button>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+function MyWordsSection() {
+  const { addUserItem, deleteUserItem, userItems } = useContext(UserContentContext);
+  const [selectedType, setSelectedType] = useState("noun");
+  const [formValues, setFormValues] = useState(makeEmptyUserForm);
+  const activeFields = userWordFields[selectedType];
+
+  function updateField(fieldName, value) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [fieldName]: value,
+    }));
+  }
+
+  function changeType(nextType) {
+    setSelectedType(nextType);
+    setFormValues(makeEmptyUserForm());
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+
+    const baseItem = {
+      id: `user-${selectedType}-${Date.now()}`,
+      type: selectedType,
+      theme: "Meine Wörter",
+    };
+
+    const newItem = activeFields.reduce(
+      (item, field) => ({
+        ...item,
+        [field.name]: formValues[field.name].trim(),
+      }),
+      baseItem,
+    );
+
+    addUserItem(newItem);
+    setFormValues(makeEmptyUserForm());
+  }
+
+  function getItemPrompt(item) {
+    return item.type === "sentence" ? item.germanPrompt : item.german;
+  }
+
+  function getItemAnswer(item) {
+    if (item.type === "noun") {
+      return [
+        item.bokmalSingular,
+        item.bokmalSingularDefinite,
+        item.bokmalPlural,
+        item.bokmalPluralDefinite,
+      ].join(" / ");
+    }
+
+    if (item.type === "verb") {
+      return [item.bokmalInfinitive, item.bokmalPresent, item.bokmalPast].join(
+        " / ",
+      );
+    }
+
+    return item.bokmalAnswer;
+  }
+
+  return (
+    <section className="content-section" id="meine-woerter">
+      <div className="section-heading">
+        <p className="eyebrow">Meine Wörter</p>
+        <h2>Eigene Inhalte</h2>
+      </div>
+
+      <article className="data-card user-content-card">
+        <form className="user-word-form" onSubmit={handleSubmit}>
+          <label>
+            <span>Typ</span>
+            <select
+              value={selectedType}
+              onChange={(event) => changeType(event.target.value)}
+            >
+              <option value="noun">Substantiv</option>
+              <option value="verb">Verb</option>
+              <option value="sentence">Satz</option>
+            </select>
+          </label>
+
+          <div className="user-field-grid">
+            {activeFields.map((field) => (
+              <label key={field.name}>
+                <span>{field.label}</span>
+                <input
+                  required
+                  type="text"
+                  value={formValues[field.name]}
+                  onChange={(event) => updateField(field.name, event.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+
+          <button className="button-primary" type="submit">
+            Hinzufügen
+          </button>
+        </form>
+
+        <div className="user-items">
+          <h3>Gespeicherte Inhalte</h3>
+          {userItems.length === 0 ? (
+            <p className="empty-state">Noch keine eigenen Inhalte.</p>
+          ) : (
+            <div className="user-item-list">
+              {userItems.map((item) => (
+                <article className="user-item" key={item.id}>
+                  <div>
+                    <span className="theme-pill">{userTypeLabels[item.type]}</span>
+                    <strong>{getItemPrompt(item)}</strong>
+                    <p>{getItemAnswer(item)}</p>
+                  </div>
+                  <button
+                    className="button-secondary"
+                    type="button"
+                    onClick={() => deleteUserItem(item.id)}
+                  >
+                    Löschen
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </article>
     </section>
@@ -330,12 +563,7 @@ function SentencePracticeSection() {
 
 function PlaceholderSections() {
   return (
-    <section className="section-strip" id="meine-woerter">
-      <article>
-        <p className="eyebrow">Meine Wörter</p>
-        <h2>Eigene Inhalte</h2>
-        <p>Neue Substantive, Verben, Sätze und Korrekturen sammeln.</p>
-      </article>
+    <section className="section-strip">
       <article id="fortschritt">
         <p className="eyebrow">Fortschritt</p>
         <h2>Einfacher Überblick</h2>
@@ -346,15 +574,42 @@ function PlaceholderSections() {
 }
 
 function App() {
+  const [userItems, setUserItems] = useState(getInitialUserItems);
+  const flashcardItems = useMemo(() => makeCards(userItems), [userItems]);
+
+  useEffect(() => {
+    window.localStorage.setItem(USER_CONTENT_KEY, JSON.stringify(userItems));
+  }, [userItems]);
+
+  function addUserItem(newItem) {
+    setUserItems((currentItems) => [...currentItems, newItem]);
+  }
+
+  function deleteUserItem(itemId) {
+    setUserItems((currentItems) =>
+      currentItems.filter((item) => item.id !== itemId),
+    );
+  }
+
+  const userContentValue = {
+    addUserItem,
+    deleteUserItem,
+    flashcardItems,
+    userItems,
+  };
+
   return (
-    <main className="app-shell">
-      <Header />
-      <StartSection />
-      <VocabularySection />
-      <FlashcardsSection />
-      <SentencePracticeSection />
-      <PlaceholderSections />
-    </main>
+    <UserContentContext.Provider value={userContentValue}>
+      <main className="app-shell">
+        <Header />
+        <StartSection />
+        <VocabularySection />
+        <FlashcardsSection />
+        <SentencePracticeSection />
+        <MyWordsSection />
+        <PlaceholderSections />
+      </main>
+    </UserContentContext.Provider>
   );
 }
 
