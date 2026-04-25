@@ -285,6 +285,45 @@ th {
   padding: var(--space-lg);
 }
 
+.answer-panel span,
+.answer-field span {
+  color: var(--color-text-muted);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: var(--space-sm);
+  text-transform: uppercase;
+}
+
+.answer-panel p {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.answer-field {
+  color: var(--color-text-main);
+  display: grid;
+  font-weight: 800;
+  gap: var(--space-sm);
+}
+
+.answer-field textarea {
+  background: #ffffff;
+  border: 1px solid rgba(57, 101, 115, 0.35);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font: inherit;
+  min-height: 8rem;
+  padding: var(--space-md);
+  resize: vertical;
+}
+
+.comparison-grid {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .sentence-list {
   display: grid;
   gap: var(--space-md);
@@ -320,6 +359,7 @@ th {
 @media (max-width: 820px) {
   .app-header,
   .start-grid,
+  .comparison-grid,
   .sentence-list,
   .section-strip {
     grid-template-columns: 1fr;
