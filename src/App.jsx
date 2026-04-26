@@ -364,7 +364,8 @@ function FlashcardsSection() {
   const { flashcardItems } = useContext(UserContentContext);
   const [activeFilter, setActiveFilter] = useState("all");
   const [cardIndex, setCardIndex] = useState(0);
-  const [isAnswerVisible, setIsAnswerVisible] = useState(false);
+  const [isAnswerChecked, setIsAnswerChecked] = useState(false);
+  const [typedAnswer, setTypedAnswer] = useState("");
   const selectedFilter = cardFilters.find((filter) => filter.id === activeFilter);
   const filteredCards = selectedFilter.cardLabel
     ? flashcardItems.filter((card) => card.label === selectedFilter.cardLabel)
@@ -374,19 +375,22 @@ function FlashcardsSection() {
   useEffect(() => {
     if (cardIndex >= filteredCards.length) {
       setCardIndex(0);
-      setIsAnswerVisible(false);
+      setIsAnswerChecked(false);
+      setTypedAnswer("");
     }
   }, [cardIndex, filteredCards.length]);
 
   function changeFilter(filterId) {
     setActiveFilter(filterId);
     setCardIndex(0);
-    setIsAnswerVisible(false);
+    setIsAnswerChecked(false);
+    setTypedAnswer("");
   }
 
   function showNextCard() {
     setCardIndex((index) => (index + 1) % filteredCards.length);
-    setIsAnswerVisible(false);
+    setIsAnswerChecked(false);
+    setTypedAnswer("");
   }
 
   return (
@@ -421,16 +425,33 @@ function FlashcardsSection() {
         <p className="card-task">{currentCard.task}</p>
         <h3>{currentCard.prompt}</h3>
         <p className="card-theme">{currentCard.theme}</p>
-        <div className="answer-panel">
-          {isAnswerVisible ? currentCard.answer : "Antwort ist verdeckt"}
-        </div>
+        <label className="answer-field">
+          <span>Meine Antwort</span>
+          <input
+            type="text"
+            value={typedAnswer}
+            onChange={(event) => setTypedAnswer(event.target.value)}
+          />
+        </label>
+        {isAnswerChecked && (
+          <div className="comparison-grid">
+            <section className="answer-panel">
+              <span>Meine Antwort</span>
+              <p>{typedAnswer || "Keine Antwort eingegeben."}</p>
+            </section>
+            <section className="answer-panel">
+              <span>Korrekte Antwort</span>
+              <p>{currentCard.answer}</p>
+            </section>
+          </div>
+        )}
         <div className="button-row">
           <button
             className="button-primary"
             type="button"
-            onClick={() => setIsAnswerVisible(true)}
+            onClick={() => setIsAnswerChecked(true)}
           >
-            Antwort zeigen
+            Antwort prüfen
           </button>
           <button className="button-secondary" type="button" onClick={showNextCard}>
             Nächste Karte
