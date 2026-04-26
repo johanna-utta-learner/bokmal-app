@@ -238,9 +238,20 @@ function StartSection() {
 }
 
 function VocabularySection() {
+  const { userItems } = useContext(UserContentContext);
   const [isVocabularyVisible, setIsVocabularyVisible] = useState(false);
-  const sortedSeedNouns = sortByBokmalText(seedNouns, getNounSortText);
-  const sortedSeedVerbs = sortByBokmalText(seedVerbs, getVerbSortText);
+  const sortedNouns = sortByBokmalText(
+    [...seedNouns, ...userItems.filter((item) => item.type === "noun")],
+    getNounSortText,
+  );
+  const sortedVerbs = sortByBokmalText(
+    [...seedVerbs, ...userItems.filter((item) => item.type === "verb")],
+    getVerbSortText,
+  );
+  const sortedSentences = sortByBokmalText(
+    [...seedSentences, ...userItems.filter((item) => item.type === "sentence")],
+    (sentence) => sentence.bokmalAnswer,
+  );
 
   return (
     <section className="content-section" id="wortschatz">
@@ -273,7 +284,7 @@ function VocabularySection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedSeedNouns.map((noun) => (
+                  {sortedNouns.map((noun) => (
                     <tr key={noun.id}>
                       <td>
                         <span className="theme-pill">{noun.theme}</span>
@@ -303,7 +314,7 @@ function VocabularySection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedSeedVerbs.map((verb) => (
+                  {sortedVerbs.map((verb) => (
                     <tr key={verb.id}>
                       <td>
                         <span className="theme-pill">{verb.theme}</span>
@@ -312,6 +323,31 @@ function VocabularySection() {
                       <td>{verb.bokmalInfinitive}</td>
                       <td>{verb.bokmalPresent}</td>
                       <td>{verb.bokmalPast}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="data-card">
+            <h3>Sätze</h3>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Deutsch</th>
+                    <th>Bokmål</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedSentences.map((sentence) => (
+                    <tr key={sentence.id}>
+                      <td>
+                        <span className="theme-pill">{sentence.theme}</span>
+                        {sentence.germanPrompt}
+                      </td>
+                      <td>{sentence.bokmalAnswer}</td>
                     </tr>
                   ))}
                 </tbody>
