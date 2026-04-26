@@ -35,13 +35,13 @@ The app uses two kinds of content.
 
 ### 1. Seed content
 
-Seed content is the built-in starter vocabulary and sentence material stored in the source code.
+Seed content is the built-in starter vocabulary and sentence material stored in the source code.  The seed content is a set of verbs, nouns and example sentences in Bokmal with German translations that I created in conjunction with chatgpt and Norwegian for the web.  
 
 This content is always available when the app loads.
 
 ### 2. User-added content
 
-User-added content is content added through the app interface.  I add it myself when I see interesting phrases or vocab.  
+User-added content is content added through the app interface.  I add it myself when I see interesting phrases or vocab, for example from Duolingo or watching episodes of Peppa Gris.
 
 It is currently stored in the browser using `localStorage`.
 
@@ -56,6 +56,8 @@ If a saved JSON file is imported, the user-added content is restored and appears
 People can view the project on GitHub, download it, clone it, or fork it.
 
 People cannot change this original repo unless they are given collaborator or write access.
+
+I expect people to use the project respectfully and lawfully.
 
 ## Running locally
 
@@ -80,14 +82,6 @@ src/App.jsx
 src/App.css
 src/data/seedContent.js
 ```
-
-## Notes
-
-This is an evolving personal learning project, not a polished commercial product.
-
-The priority is clarity, usefulness, and safe incremental development.
-
-
 
 
 
