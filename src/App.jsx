@@ -222,6 +222,8 @@ function StartSection() {
 }
 
 function VocabularySection() {
+  const [isVocabularyVisible, setIsVocabularyVisible] = useState(false);
+
   return (
     <section className="content-section" id="wortschatz">
       <div className="section-heading">
@@ -229,67 +231,77 @@ function VocabularySection() {
         <h2>Substantive und Verben</h2>
       </div>
 
-      <div className="vocabulary-grid">
-        <article className="data-card">
-          <h3>Substantive</h3>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Deutsch</th>
-                  <th>Singular</th>
-                  <th>Bestimmt Singular</th>
-                  <th>Plural</th>
-                  <th>Bestimmt Plural</th>
-                </tr>
-              </thead>
-              <tbody>
-                {seedNouns.map((noun) => (
-                  <tr key={noun.id}>
-                    <td>
-                      <span className="theme-pill">{noun.theme}</span>
-                      {noun.german}
-                    </td>
-                    <td>{noun.bokmalSingular}</td>
-                    <td>{noun.bokmalSingularDefinite}</td>
-                    <td>{noun.bokmalPlural}</td>
-                    <td>{noun.bokmalPluralDefinite}</td>
+      {!isVocabularyVisible ? (
+        <button
+          className="button-secondary"
+          type="button"
+          onClick={() => setIsVocabularyVisible(true)}
+        >
+          Wortschatz anzeigen
+        </button>
+      ) : (
+        <div className="vocabulary-grid">
+          <article className="data-card">
+            <h3>Substantive</h3>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Deutsch</th>
+                    <th>Singular</th>
+                    <th>Bestimmt Singular</th>
+                    <th>Plural</th>
+                    <th>Bestimmt Plural</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
+                </thead>
+                <tbody>
+                  {seedNouns.map((noun) => (
+                    <tr key={noun.id}>
+                      <td>
+                        <span className="theme-pill">{noun.theme}</span>
+                        {noun.german}
+                      </td>
+                      <td>{noun.bokmalSingular}</td>
+                      <td>{noun.bokmalSingularDefinite}</td>
+                      <td>{noun.bokmalPlural}</td>
+                      <td>{noun.bokmalPluralDefinite}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
 
-        <article className="data-card">
-          <h3>Verben</h3>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Deutsch</th>
-                  <th>Infinitiv</th>
-                  <th>Präsens</th>
-                  <th>Vergangenheit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {seedVerbs.map((verb) => (
-                  <tr key={verb.id}>
-                    <td>
-                      <span className="theme-pill">{verb.theme}</span>
-                      {verb.german}
-                    </td>
-                    <td>{verb.bokmalInfinitive}</td>
-                    <td>{verb.bokmalPresent}</td>
-                    <td>{verb.bokmalPast}</td>
+          <article className="data-card">
+            <h3>Verben</h3>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Deutsch</th>
+                    <th>Infinitiv</th>
+                    <th>Präsens</th>
+                    <th>Vergangenheit</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
-      </div>
+                </thead>
+                <tbody>
+                  {seedVerbs.map((verb) => (
+                    <tr key={verb.id}>
+                      <td>
+                        <span className="theme-pill">{verb.theme}</span>
+                        {verb.german}
+                      </td>
+                      <td>{verb.bokmalInfinitive}</td>
+                      <td>{verb.bokmalPresent}</td>
+                      <td>{verb.bokmalPast}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      )}
     </section>
   );
 }
