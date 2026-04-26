@@ -434,6 +434,22 @@ th {
   gap: var(--space-sm);
 }
 
+.user-item-groups {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.user-item-group {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.user-item-group h4 {
+  color: var(--color-text-main);
+  font-size: 1rem;
+  margin: 0;
+}
+
 .user-item {
   align-items: center;
   background: rgba(255, 255, 255, 0.45);

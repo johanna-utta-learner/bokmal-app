@@ -382,6 +382,20 @@ function MyWordsSection() {
   const [formValues, setFormValues] = useState(makeEmptyUserForm);
   const [importStatus, setImportStatus] = useState("");
   const activeFields = userWordFields[selectedType];
+  const groupedUserItems = [
+    {
+      title: "Substantive",
+      items: userItems.filter((item) => item.type === "noun"),
+    },
+    {
+      title: "Verben",
+      items: userItems.filter((item) => item.type === "verb"),
+    },
+    {
+      title: "Sätze",
+      items: userItems.filter((item) => item.type === "sentence"),
+    },
+  ];
 
   function updateField(fieldName, value) {
     setFormValues((currentValues) => ({
@@ -543,22 +557,35 @@ function MyWordsSection() {
           {userItems.length === 0 ? (
             <p className="empty-state">Noch keine eigenen Inhalte.</p>
           ) : (
-            <div className="user-item-list">
-              {userItems.map((item) => (
-                <article className="user-item" key={item.id}>
-                  <div>
-                    <span className="theme-pill">{userTypeLabels[item.type]}</span>
-                    <strong>{getItemPrompt(item)}</strong>
-                    <p>{getItemAnswer(item)}</p>
-                  </div>
-                  <button
-                    className="button-secondary"
-                    type="button"
-                    onClick={() => deleteUserItem(item.id)}
-                  >
-                    Löschen
-                  </button>
-                </article>
+            <div className="user-item-groups">
+              {groupedUserItems.map((group) => (
+                <section className="user-item-group" key={group.title}>
+                  <h4>{group.title}</h4>
+                  {group.items.length === 0 ? (
+                    <p className="empty-state">Keine Einträge.</p>
+                  ) : (
+                    <div className="user-item-list">
+                      {group.items.map((item) => (
+                        <article className="user-item" key={item.id}>
+                          <div>
+                            <span className="theme-pill">
+                              {userTypeLabels[item.type]}
+                            </span>
+                            <strong>{getItemPrompt(item)}</strong>
+                            <p>{getItemAnswer(item)}</p>
+                          </div>
+                          <button
+                            className="button-secondary"
+                            type="button"
+                            onClick={() => deleteUserItem(item.id)}
+                          >
+                            Löschen
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
               ))}
             </div>
           )}
