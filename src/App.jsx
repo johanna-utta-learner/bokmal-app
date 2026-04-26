@@ -435,9 +435,14 @@ function MyWordsSection() {
     const blob = new Blob([fileContents], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const downloadLink = document.createElement("a");
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10);
+    const timePart = `${String(now.getHours()).padStart(2, "0")}${String(
+      now.getMinutes(),
+    ).padStart(2, "0")}`;
 
     downloadLink.href = url;
-    downloadLink.download = "bokmal-meine-woerter.json";
+    downloadLink.download = `bokmal-content-${datePart}-${timePart}.json`;
     downloadLink.click();
     URL.revokeObjectURL(url);
   }
