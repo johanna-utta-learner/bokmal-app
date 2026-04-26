@@ -231,15 +231,15 @@ function VocabularySection() {
         <h2>Substantive und Verben</h2>
       </div>
 
-      {!isVocabularyVisible ? (
-        <button
-          className="button-secondary"
-          type="button"
-          onClick={() => setIsVocabularyVisible(true)}
-        >
-          Wortschatz anzeigen
-        </button>
-      ) : (
+      <button
+        className="button-secondary"
+        type="button"
+        onClick={() => setIsVocabularyVisible((isVisible) => !isVisible)}
+      >
+        {isVocabularyVisible ? "Wortschatz ausblenden" : "Wortschatz anzeigen"}
+      </button>
+
+      {isVocabularyVisible && (
         <div className="vocabulary-grid">
           <article className="data-card">
             <h3>Substantive</h3>
