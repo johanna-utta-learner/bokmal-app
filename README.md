@@ -1,16 +1,14 @@
 # Bokmål Learning App
 
-A small personal learning app for studying **Norwegian Bokmål**, using **German as the support/source language**.
+A small personal learning app for studying Norwegian Bokmål  using German as the support/source language.
 
-This is an early AI-assisted project built with **React + Vite**. It is also my first project using Codex.
+This is an early AI-assisted project built with **React + Vite**. It is also my first project using Codex.  I cannot code, I know a little html and css. That is all.  I do not know if codex has built the app in the most clean and elegant way.  I do not know if it contains flaws.  It is a rough mvp which works for my learning goals. 
 
 ## Development transparency
 
-This is my first project using **Codex**.
-
 I am building the app in **VS Code on a Chromebook**, using the **Codex extension**. I am also using **ChatGPT / GPT-5.5 Thinking** to advise me step by step on setup, Git, GitHub, React/Vite structure, and safe incremental development.
 
-The app is therefore an AI-assisted learning project. I am making the decisions about what the app should do, testing the changes myself, and committing each working checkpoint to GitHub.
+The app is therefore an AI-assisted learning project. I am making the decisions about what the app should do, testing the changes myself, and committing each working checkpoint to GitHub.  But everything else is done with AI assistance.
 
 The purpose of sharing this repo is transparency and usefulness. Others are welcome to view it, clone it, or fork it as a starting point for their own language-learning app, without changing this original repo.
 
@@ -43,11 +41,11 @@ This content is always available when the app loads.
 
 ### 2. User-added content
 
-User-added content is content added through the app interface.
+User-added content is content added through the app interface.  I add it myself when I see interesting phrases or vocab.  
 
 It is currently stored in the browser using `localStorage`.
 
-Because browser storage can disappear, the app includes an export/import system. This allows user-added content to be backed up to a JSON file and restored later.
+Because browser storage can disappear, the app includes an export/import system. This allows user-added content to be backed up to a JSON file and restored later.  The JSON file is saved on my chromebook with the date and time it was exported as part of the file name.  If I lose local browser status, then I import the data from my hard drive using the import button.   
 
 If browser storage is lost, the app falls back to seed content only.
 
