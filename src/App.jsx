@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { seedNouns, seedSentences, seedVerbs } from "./data/seedContent";
+import {
+  seedAdjectives,
+  seedNouns,
+  seedOrdinals,
+  seedSentences,
+  seedVerbs,
+} from "./data/seedContent";
 import "./App.css";
 
 const USER_CONTENT_KEY = "bokmal-app-user-content";
@@ -19,6 +25,8 @@ const cardFilters = [
   { id: "all", label: "Alle", cardLabel: null },
   { id: "nouns", label: "Substantive", cardLabel: "Substantiv" },
   { id: "verbs", label: "Verben", cardLabel: "Verb" },
+  { id: "adjectives", label: "Adjektive", cardLabel: "Adjektiv" },
+  { id: "ordinals", label: "Ordnungszahlen", cardLabel: "Ordnungszahl" },
   { id: "sentences", label: "Sätze", cardLabel: "Satz" },
 ];
 
@@ -62,6 +70,14 @@ function getNounSortText(noun) {
 
 function getVerbSortText(verb) {
   return verb.bokmalInfinitive.replace(/^å\s+/i, "");
+}
+
+function getAdjectiveSortText(adjective) {
+  return adjective.bokmalBase;
+}
+
+function getOrdinalSortText(ordinal) {
+  return ordinal.bokmal;
 }
 
 function getInitialUserItems() {
@@ -168,6 +184,27 @@ function makeCards(userItems) {
         " / ",
       ),
     })),
+    ...seedAdjectives.map((adjective) => ({
+      id: `${adjective.id}-card`,
+      label: "Adjektiv",
+      theme: adjective.theme,
+      prompt: adjective.german,
+      task: "Erinnere dich an die Bokmål-Formen.",
+      answer: [
+        adjective.bokmalBase,
+        adjective.bokmalNeuter,
+        adjective.bokmalPlural,
+        adjective.bokmalDefinite,
+      ].join(" / "),
+    })),
+    ...seedOrdinals.map((ordinal) => ({
+      id: `${ordinal.id}-card`,
+      label: "Ordnungszahl",
+      theme: ordinal.theme,
+      prompt: `${ordinal.number}. ${ordinal.german}`,
+      task: "Erinnere dich an die Bokmål-Ordnungszahl.",
+      answer: ordinal.bokmal,
+    })),
     ...seedSentences.map((sentence) => ({
       id: `${sentence.id}-card`,
       label: "Satz",
@@ -222,7 +259,13 @@ function StartSection() {
         </article>
         <article>
           <span>Wortschatz</span>
-          <strong>{seedNouns.length + seedVerbs.length} Einträge</strong>
+          <strong>
+            {seedNouns.length +
+              seedVerbs.length +
+              seedAdjectives.length +
+              seedOrdinals.length}{" "}
+            Einträge
+          </strong>
         </article>
         <article>
           <span>Übungen</span>
@@ -248,6 +291,8 @@ function VocabularySection() {
     [...seedVerbs, ...userItems.filter((item) => item.type === "verb")],
     getVerbSortText,
   );
+  const sortedAdjectives = sortByBokmalText(seedAdjectives, getAdjectiveSortText);
+  const sortedOrdinals = sortByBokmalText(seedOrdinals, getOrdinalSortText);
   const sortedSentences = sortByBokmalText(
     [...seedSentences, ...userItems.filter((item) => item.type === "sentence")],
     (sentence) => sentence.bokmalAnswer,
@@ -257,7 +302,7 @@ function VocabularySection() {
     <section className="content-section" id="wortschatz">
       <div className="section-heading">
         <p className="eyebrow">Wortschatz</p>
-        <h2>Substantive und Verben</h2>
+        <h2>Substantive, Verben, Adjektive und Ordnungszahlen</h2>
       </div>
 
       <button
@@ -323,6 +368,64 @@ function VocabularySection() {
                       <td>{verb.bokmalInfinitive}</td>
                       <td>{verb.bokmalPresent}</td>
                       <td>{verb.bokmalPast}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="data-card">
+            <h3>Adjektive</h3>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Deutsch</th>
+                    <th>Grundform</th>
+                    <th>Neutrum</th>
+                    <th>Plural</th>
+                    <th>Bestimmt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedAdjectives.map((adjective) => (
+                    <tr key={adjective.id}>
+                      <td>
+                        <span className="theme-pill">{adjective.theme}</span>
+                        {adjective.german}
+                      </td>
+                      <td>{adjective.bokmalBase}</td>
+                      <td>{adjective.bokmalNeuter}</td>
+                      <td>{adjective.bokmalPlural}</td>
+                      <td>{adjective.bokmalDefinite}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="data-card">
+            <h3>Ordnungszahlen</h3>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Zahl</th>
+                    <th>Deutsch</th>
+                    <th>Bokmål</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedOrdinals.map((ordinal) => (
+                    <tr key={ordinal.id}>
+                      <td>{ordinal.number}</td>
+                      <td>
+                        <span className="theme-pill">{ordinal.theme}</span>
+                        {ordinal.german}
+                      </td>
+                      <td>{ordinal.bokmal}</td>
                     </tr>
                   ))}
                 </tbody>
