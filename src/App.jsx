@@ -48,6 +48,22 @@ const userTypeLabels = {
   sentence: "Satz",
 };
 
+const bokmalCollator = new Intl.Collator("nb", { sensitivity: "base" });
+
+function sortByBokmalText(items, getText) {
+  return [...items].sort((firstItem, secondItem) =>
+    bokmalCollator.compare(getText(firstItem), getText(secondItem)),
+  );
+}
+
+function getNounSortText(noun) {
+  return noun.bokmalSingular.replace(/^(en|ei|et)\s+/i, "");
+}
+
+function getVerbSortText(verb) {
+  return verb.bokmalInfinitive.replace(/^å\s+/i, "");
+}
+
 function getInitialUserItems() {
   try {
     const storedItems = window.localStorage.getItem(USER_CONTENT_KEY);
@@ -223,6 +239,8 @@ function StartSection() {
 
 function VocabularySection() {
   const [isVocabularyVisible, setIsVocabularyVisible] = useState(false);
+  const sortedSeedNouns = sortByBokmalText(seedNouns, getNounSortText);
+  const sortedSeedVerbs = sortByBokmalText(seedVerbs, getVerbSortText);
 
   return (
     <section className="content-section" id="wortschatz">
@@ -255,7 +273,7 @@ function VocabularySection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {seedNouns.map((noun) => (
+                  {sortedSeedNouns.map((noun) => (
                     <tr key={noun.id}>
                       <td>
                         <span className="theme-pill">{noun.theme}</span>
@@ -285,7 +303,7 @@ function VocabularySection() {
                   </tr>
                 </thead>
                 <tbody>
-                  {seedVerbs.map((verb) => (
+                  {sortedSeedVerbs.map((verb) => (
                     <tr key={verb.id}>
                       <td>
                         <span className="theme-pill">{verb.theme}</span>
@@ -397,15 +415,24 @@ function MyWordsSection() {
   const groupedUserItems = [
     {
       title: "Substantive",
-      items: userItems.filter((item) => item.type === "noun"),
+      items: sortByBokmalText(
+        userItems.filter((item) => item.type === "noun"),
+        getNounSortText,
+      ),
     },
     {
       title: "Verben",
-      items: userItems.filter((item) => item.type === "verb"),
+      items: sortByBokmalText(
+        userItems.filter((item) => item.type === "verb"),
+        getVerbSortText,
+      ),
     },
     {
       title: "Sätze",
-      items: userItems.filter((item) => item.type === "sentence"),
+      items: sortByBokmalText(
+        userItems.filter((item) => item.type === "sentence"),
+        (sentence) => sentence.bokmalAnswer,
+      ),
     },
   ];
 
