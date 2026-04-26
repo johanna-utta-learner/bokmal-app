@@ -33,3 +33,4 @@ src/.codex/
 .codex/
 src/.codex/
 .codex
+src/data/seedContentbeforeAdjectives.js
