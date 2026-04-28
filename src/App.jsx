@@ -30,6 +30,12 @@ const cardFilters = [
   { id: "sentences", label: "Sätze", cardLabel: "Satz" },
 ];
 
+const practiceSizeOptions = [
+  { id: "all", label: "Alle Karten", cardCount: null },
+  { id: "10", label: "10 zufällige Karten", cardCount: 10 },
+  { id: "20", label: "20 zufällige Karten", cardCount: 20 },
+];
+
 const userWordFields = {
   noun: [
     { name: "german", label: "Deutsch" },
@@ -215,6 +221,32 @@ function makeCards(userItems) {
     })),
     ...userItems.map(mapUserItemToCard),
   ];
+}
+
+function shuffleCards(cards) {
+  const shuffledCards = [...cards];
+
+  for (let index = shuffledCards.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffledCards[index], shuffledCards[randomIndex]] = [
+      shuffledCards[randomIndex],
+      shuffledCards[index],
+    ];
+  }
+
+  return shuffledCards;
+}
+
+function makePracticeCards(cards, practiceSize) {
+  const selectedPracticeSize =
+    practiceSizeOptions.find((option) => option.id === practiceSize) ??
+    practiceSizeOptions[0];
+
+  if (!selectedPracticeSize.cardCount) {
+    return cards;
+  }
+
+  return shuffleCards(cards).slice(0, selectedPracticeSize.cardCount);
 }
 
 function Header() {
@@ -466,34 +498,60 @@ function VocabularySection() {
 function FlashcardsSection() {
   const { flashcardItems } = useContext(UserContentContext);
   const [activeFilter, setActiveFilter] = useState("all");
+  const [practiceSize, setPracticeSize] = useState("all");
   const [cardIndex, setCardIndex] = useState(0);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [typedAnswer, setTypedAnswer] = useState("");
-  const selectedFilter = cardFilters.find((filter) => filter.id === activeFilter);
-  const filteredCards = selectedFilter.cardLabel
-    ? flashcardItems.filter((card) => card.label === selectedFilter.cardLabel)
-    : flashcardItems;
-  const currentCard = filteredCards[cardIndex];
+  const selectedFilter =
+    cardFilters.find((filter) => filter.id === activeFilter) ?? cardFilters[0];
+  const filteredCards = useMemo(
+    () =>
+      selectedFilter.cardLabel
+        ? flashcardItems.filter((card) => card.label === selectedFilter.cardLabel)
+        : flashcardItems,
+    [flashcardItems, selectedFilter.cardLabel],
+  );
+  const practiceCards = useMemo(
+    () => makePracticeCards(filteredCards, practiceSize),
+    [filteredCards, practiceSize],
+  );
+  const currentCardIndex =
+    practiceCards.length > 0
+      ? Math.min(cardIndex, practiceCards.length - 1)
+      : 0;
+  const currentCard = practiceCards[currentCardIndex];
 
   useEffect(() => {
-    if (cardIndex >= filteredCards.length) {
-      setCardIndex(0);
-      setIsAnswerChecked(false);
-      setTypedAnswer("");
-    }
-  }, [cardIndex, filteredCards.length]);
-
-  function changeFilter(filterId) {
-    setActiveFilter(filterId);
     setCardIndex(0);
+    setIsAnswerChecked(false);
+    setTypedAnswer("");
+  }, [activeFilter, flashcardItems, practiceSize]);
+
+  function resetAnswerState() {
     setIsAnswerChecked(false);
     setTypedAnswer("");
   }
 
+  function changeFilter(filterId) {
+    setActiveFilter(filterId);
+    setCardIndex(0);
+    resetAnswerState();
+  }
+
+  function changePracticeSize(sizeId) {
+    setPracticeSize(sizeId);
+    setCardIndex(0);
+    resetAnswerState();
+  }
+
+  function showPreviousCard() {
+    setCardIndex((index) => Math.max(index - 1, 0));
+    resetAnswerState();
+  }
+
   function showNextCard() {
-    setCardIndex((index) => (index + 1) % filteredCards.length);
-    setIsAnswerChecked(false);
-    setTypedAnswer("");
+    setCardIndex((index) => Math.min(index + 1, practiceCards.length - 1));
+    resetAnswerState();
   }
 
   return (
@@ -520,10 +578,26 @@ function FlashcardsSection() {
         ))}
       </div>
 
+      <label className="practice-size-control">
+        <span>Übungsumfang</span>
+        <select
+          value={practiceSize}
+          onChange={(event) => changePracticeSize(event.target.value)}
+        >
+          {practiceSizeOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <article className="flashcard" aria-live="polite">
         <div className="card-topline">
           <span className="theme-pill">{currentCard.label}</span>
-          <span>Karte {cardIndex + 1} von {filteredCards.length}</span>
+          <span>
+            Karte {currentCardIndex + 1} von {practiceCards.length}
+          </span>
         </div>
         <p className="card-task">{currentCard.task}</p>
         <h3>{currentCard.prompt}</h3>
@@ -556,7 +630,20 @@ function FlashcardsSection() {
           >
             Antwort prüfen
           </button>
-          <button className="button-secondary" type="button" onClick={showNextCard}>
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={showPreviousCard}
+            disabled={currentCardIndex === 0}
+          >
+            Vorherige Karte
+          </button>
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={showNextCard}
+            disabled={currentCardIndex === practiceCards.length - 1}
+          >
             Nächste Karte
           </button>
         </div>
