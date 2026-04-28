@@ -237,6 +237,27 @@ function shuffleCards(cards) {
   return shuffledCards;
 }
 
+function getFlashcardPracticeKey(card) {
+  return [card.label, card.answer, card.prompt]
+    .map((value) => value.trim().toLocaleLowerCase("nb"))
+    .join("|");
+}
+
+function getUniquePracticeCards(cards) {
+  const seenCardKeys = new Set();
+
+  return cards.filter((card) => {
+    const cardKey = getFlashcardPracticeKey(card);
+
+    if (seenCardKeys.has(cardKey)) {
+      return false;
+    }
+
+    seenCardKeys.add(cardKey);
+    return true;
+  });
+}
+
 function makePracticeCards(cards, practiceSize) {
   const selectedPracticeSize =
     practiceSizeOptions.find((option) => option.id === practiceSize) ??
@@ -246,7 +267,10 @@ function makePracticeCards(cards, practiceSize) {
     return cards;
   }
 
-  return shuffleCards(cards).slice(0, selectedPracticeSize.cardCount);
+  return shuffleCards(getUniquePracticeCards(cards)).slice(
+    0,
+    selectedPracticeSize.cardCount,
+  );
 }
 
 function Header() {
