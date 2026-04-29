@@ -9,14 +9,17 @@ import {
 import "./App.css";
 
 const USER_CONTENT_KEY = "bokmal-app-user-content";
+const HOMEWORK_CONTENT_KEY = "bokmal-app-homework-content";
 
 const UserContentContext = createContext(null);
+const HomeworkContentContext = createContext(null);
 
 const sections = [
   { id: "start", label: "Start" },
   { id: "wortschatz", label: "Wortschatz" },
   { id: "karten", label: "Karten" },
   { id: "uebungen", label: "Übungen" },
+  { id: "hausaufgaben", label: "Hausaufgaben" },
   { id: "meine-woerter", label: "Meine Wörter" },
   { id: "fortschritt", label: "Fortschritt" },
 ];
@@ -95,6 +98,24 @@ function getInitialUserItems() {
   }
 }
 
+function getInitialHomeworkEntries() {
+  try {
+    const storedEntries = window.localStorage.getItem(HOMEWORK_CONTENT_KEY);
+    return storedEntries ? JSON.parse(storedEntries) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getTodayDateInputValue() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
 function makeEmptyUserForm() {
   return {
     german: "",
@@ -108,6 +129,17 @@ function makeEmptyUserForm() {
     germanPrompt: "",
     bokmalAnswer: "",
   };
+}
+
+function isValidHomeworkEntry(entry) {
+  return (
+    entry &&
+    typeof entry === "object" &&
+    typeof entry.id === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(entry.date) &&
+    typeof entry.text === "string" &&
+    typeof entry.createdAt === "string"
+  );
 }
 
 function mapUserItemToCard(item) {
@@ -979,6 +1011,249 @@ function SentencePracticeSection() {
   );
 }
 
+function HomeworkSection() {
+  const {
+    addHomeworkEntry,
+    deleteHomeworkEntry,
+    homeworkEntries,
+    importHomeworkEntries,
+    updateHomeworkEntry,
+  } = useContext(HomeworkContentContext);
+  const [selectedDate, setSelectedDate] = useState(getTodayDateInputValue);
+  const [homeworkText, setHomeworkText] = useState("");
+  const [editingEntryId, setEditingEntryId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [importStatus, setImportStatus] = useState("");
+  const selectedHomeworkEntries = homeworkEntries
+    .filter((entry) => entry.date === selectedDate)
+    .sort((firstEntry, secondEntry) =>
+      secondEntry.createdAt.localeCompare(firstEntry.createdAt),
+    );
+  const displayDate = selectedDate
+    ? new Intl.DateTimeFormat("de-DE").format(
+        new Date(`${selectedDate}T00:00:00`),
+      )
+    : "kein Datum";
+
+  function saveHomeworkEntry(event) {
+    event.preventDefault();
+
+    const trimmedText = homeworkText.trim();
+
+    if (!selectedDate || !trimmedText) {
+      return;
+    }
+
+    addHomeworkEntry({
+      id: `homework-${Date.now()}`,
+      date: selectedDate,
+      text: trimmedText,
+      createdAt: new Date().toISOString(),
+    });
+    setHomeworkText("");
+  }
+
+  function startEditingHomeworkEntry(entry) {
+    setEditingEntryId(entry.id);
+    setEditingText(entry.text);
+  }
+
+  function cancelEditingHomeworkEntry() {
+    setEditingEntryId(null);
+    setEditingText("");
+  }
+
+  function saveEditedHomeworkEntry(event) {
+    event.preventDefault();
+
+    const trimmedText = editingText.trim();
+
+    if (!editingEntryId || !trimmedText) {
+      return;
+    }
+
+    updateHomeworkEntry(editingEntryId, trimmedText);
+    cancelEditingHomeworkEntry();
+  }
+
+  function deleteSelectedHomeworkEntry(entryId) {
+    deleteHomeworkEntry(entryId);
+
+    if (editingEntryId === entryId) {
+      cancelEditingHomeworkEntry();
+    }
+  }
+
+  function exportHomeworkEntries() {
+    const fileContents = JSON.stringify(homeworkEntries, null, 2);
+    const blob = new Blob([fileContents], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const downloadLink = document.createElement("a");
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10);
+    const timePart = `${String(now.getHours()).padStart(2, "0")}${String(
+      now.getMinutes(),
+    ).padStart(2, "0")}`;
+
+    downloadLink.href = url;
+    downloadLink.download = `bokmal-hausaufgaben-${datePart}-${timePart}.json`;
+    downloadLink.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function importHomeworkEntriesFromFile(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      const fileText = await file.text();
+      const importedEntries = JSON.parse(fileText);
+
+      if (
+        !Array.isArray(importedEntries) ||
+        !importedEntries.every(isValidHomeworkEntry)
+      ) {
+        setImportStatus("Die Datei enthält keine gültigen Hausaufgaben-Daten.");
+        return;
+      }
+
+      importHomeworkEntries(importedEntries);
+      setImportStatus(`${importedEntries.length} Einträge importiert.`);
+    } catch {
+      setImportStatus("Die Datei konnte nicht importiert werden.");
+    } finally {
+      event.target.value = "";
+    }
+  }
+
+  return (
+    <section className="content-section" id="hausaufgaben">
+      <div className="section-heading">
+        <p className="eyebrow">Hausaufgaben</p>
+        <h2>Notizen für den Unterricht</h2>
+      </div>
+
+      <article className="data-card homework-card">
+        <div className="import-export-row">
+          <button
+            className="button-secondary"
+            type="button"
+            onClick={exportHomeworkEntries}
+          >
+            Exportieren
+          </button>
+          <label className="import-button">
+            <span>Importieren</span>
+            <input
+              accept="application/json"
+              type="file"
+              onChange={importHomeworkEntriesFromFile}
+            />
+          </label>
+        </div>
+        {importStatus && <p className="import-status">{importStatus}</p>}
+
+        <form className="homework-form" onSubmit={saveHomeworkEntry}>
+          <label>
+            <span>Datum</span>
+            <input
+              required
+              type="date"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>Materialien</span>
+            <textarea
+              required
+              rows="8"
+              value={homeworkText}
+              onChange={(event) => setHomeworkText(event.target.value)}
+            />
+          </label>
+          <button className="button-primary" type="submit">
+            Speichern
+          </button>
+        </form>
+
+        <section className="homework-materials" aria-live="polite">
+          <h3>Materialien für {displayDate}</h3>
+          {selectedHomeworkEntries.length === 0 ? (
+            <p className="empty-state">
+              Noch keine Materialien für dieses Datum.
+            </p>
+          ) : (
+            <div className="homework-entry-list">
+              {selectedHomeworkEntries.map((entry) => (
+                <article className="homework-entry" key={entry.id}>
+                  <time dateTime={entry.createdAt}>
+                    {new Intl.DateTimeFormat("de-DE", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    }).format(new Date(entry.createdAt))}
+                  </time>
+                  {editingEntryId === entry.id ? (
+                    <form
+                      className="homework-edit-form"
+                      onSubmit={saveEditedHomeworkEntry}
+                    >
+                      <label>
+                        <span>Materialien bearbeiten</span>
+                        <textarea
+                          required
+                          rows="6"
+                          value={editingText}
+                          onChange={(event) => setEditingText(event.target.value)}
+                        />
+                      </label>
+                      <div className="button-row">
+                        <button className="button-primary" type="submit">
+                          Speichern
+                        </button>
+                        <button
+                          className="button-secondary"
+                          type="button"
+                          onClick={cancelEditingHomeworkEntry}
+                        >
+                          Abbrechen
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+                      <p>{entry.text}</p>
+                      <div className="button-row">
+                        <button
+                          className="button-secondary"
+                          type="button"
+                          onClick={() => startEditingHomeworkEntry(entry)}
+                        >
+                          Bearbeiten
+                        </button>
+                        <button
+                          className="button-secondary"
+                          type="button"
+                          onClick={() => deleteSelectedHomeworkEntry(entry.id)}
+                        >
+                          Löschen
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      </article>
+    </section>
+  );
+}
+
 function PlaceholderSections() {
   return (
     <section className="section-strip">
@@ -993,11 +1268,21 @@ function PlaceholderSections() {
 
 function App() {
   const [userItems, setUserItems] = useState(getInitialUserItems);
+  const [homeworkEntries, setHomeworkEntries] = useState(
+    getInitialHomeworkEntries,
+  );
   const flashcardItems = useMemo(() => makeCards(userItems), [userItems]);
 
   useEffect(() => {
     window.localStorage.setItem(USER_CONTENT_KEY, JSON.stringify(userItems));
   }, [userItems]);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      HOMEWORK_CONTENT_KEY,
+      JSON.stringify(homeworkEntries),
+    );
+  }, [homeworkEntries]);
 
   function addUserItem(newItem) {
     setUserItems((currentItems) => [...currentItems, newItem]);
@@ -1013,6 +1298,28 @@ function App() {
     setUserItems(importedItems);
   }
 
+  function addHomeworkEntry(newEntry) {
+    setHomeworkEntries((currentEntries) => [...currentEntries, newEntry]);
+  }
+
+  function deleteHomeworkEntry(entryId) {
+    setHomeworkEntries((currentEntries) =>
+      currentEntries.filter((entry) => entry.id !== entryId),
+    );
+  }
+
+  function updateHomeworkEntry(entryId, updatedText) {
+    setHomeworkEntries((currentEntries) =>
+      currentEntries.map((entry) =>
+        entry.id === entryId ? { ...entry, text: updatedText } : entry,
+      ),
+    );
+  }
+
+  function importHomeworkEntries(importedEntries) {
+    setHomeworkEntries(importedEntries);
+  }
+
   const userContentValue = {
     addUserItem,
     deleteUserItem,
@@ -1021,17 +1328,28 @@ function App() {
     userItems,
   };
 
+  const homeworkContentValue = {
+    addHomeworkEntry,
+    deleteHomeworkEntry,
+    homeworkEntries,
+    importHomeworkEntries,
+    updateHomeworkEntry,
+  };
+
   return (
     <UserContentContext.Provider value={userContentValue}>
-      <main className="app-shell">
-        <Header />
-        <StartSection />
-        <VocabularySection />
-        <FlashcardsSection />
-        <SentencePracticeSection />
-        <MyWordsSection />
-        <PlaceholderSections />
-      </main>
+      <HomeworkContentContext.Provider value={homeworkContentValue}>
+        <main className="app-shell">
+          <Header />
+          <StartSection />
+          <VocabularySection />
+          <FlashcardsSection />
+          <SentencePracticeSection />
+          <HomeworkSection />
+          <MyWordsSection />
+          <PlaceholderSections />
+        </main>
+      </HomeworkContentContext.Provider>
     </UserContentContext.Provider>
   );
 }

@@ -385,6 +385,11 @@ th {
   gap: var(--space-xl);
 }
 
+.homework-card {
+  display: grid;
+  gap: var(--space-xl);
+}
+
 .import-export-row {
   display: flex;
   flex-wrap: wrap;
@@ -415,11 +420,13 @@ th {
   font-weight: 700;
 }
 
+.homework-form,
 .user-word-form {
   display: grid;
   gap: var(--space-lg);
 }
 
+.homework-form label,
 .user-word-form label {
   color: var(--color-text-main);
   display: grid;
@@ -427,6 +434,7 @@ th {
   gap: var(--space-sm);
 }
 
+.homework-form label span,
 .user-word-form label span {
   color: var(--color-text-muted);
   font-size: 0.78rem;
@@ -434,6 +442,9 @@ th {
   text-transform: uppercase;
 }
 
+.homework-edit-form textarea,
+.homework-form input,
+.homework-form textarea,
 .user-word-form input,
 .user-word-form select {
   background: #ffffff;
@@ -443,6 +454,70 @@ th {
   font: inherit;
   min-height: 2.75rem;
   padding: 0.75rem 1rem;
+}
+
+.homework-form textarea {
+  min-height: 12rem;
+  resize: vertical;
+}
+
+.homework-edit-form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.homework-edit-form label {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.homework-edit-form label span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.homework-edit-form textarea {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+.homework-materials {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.homework-materials h3 {
+  color: var(--color-text-main);
+  font-size: 1.2rem;
+}
+
+.homework-entry-list {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.homework-entry {
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(57, 101, 115, 0.18);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.homework-entry time {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.homework-entry p {
+  color: var(--color-text-main);
+  font-weight: 700;
+  white-space: pre-wrap;
 }
 
 .user-field-grid {
